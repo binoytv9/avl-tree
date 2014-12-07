@@ -19,6 +19,8 @@ struct avlNode *buildTree(int *a,int l);
 struct avlNode *leftRotate(struct avlNode *node);
 struct avlNode *rightRotate(struct avlNode *node);
 struct avlNode *insert(struct avlNode *p,int data);
+struct avlNode * minValueNode(struct avlNode* node);
+struct avlNode *delete(struct avlNode *root,int data);
 
 main()
 {
@@ -30,6 +32,11 @@ main()
 	root = buildTree(a,l);
 
 	printf("\n\n");
+	printTree(root);
+	printf("\n\n");
+
+	printf("after deleting 8\n\n");
+	root = delete(root,8);
 	printTree(root);
 	printf("\n\n");
 }
@@ -62,26 +69,105 @@ struct avlNode *insert(struct avlNode *p,int data)
 	p->height = max(findHeight(p->left),findHeight(p->right)) + 1;
 
 	hFactor = checkHeight(p);
-	if(hFactor > 1){
-		//left child left subtree
-		if(data < p->left->data)
-			return rightRotate(p);
-		//left child right subtree
-		else if(data > p->left->data){
-			p->left = leftRotate(p->left);
-			return rightRotate(p);
+
+	//left child left subtree
+	if(hFactor > 1 && data < p->left->data)
+		return rightRotate(p);
+
+	//left child right subtree
+	if(hFactor > 1 && data > p->left->data){
+		p->left = leftRotate(p->left);
+		return rightRotate(p);
+	}
+
+	//right child right subtree
+	if(hFactor < -1 && data > p->right->data)
+		return leftRotate(p);
+
+	//right child left subtree
+	if(hFactor < -1 && data < p->right->data){
+		p->right = rightRotate(p->right);
+		return leftRotate(p);
+	}
+
+	return p;
+}
+
+struct avlNode *delete(struct avlNode *root,int data)
+{
+	struct avlNode *temp;
+
+	if(root == NULL)
+		return NULL;
+
+	if(data < root->data)
+		root->left = delete(root->left,data);
+	else if(data > root->data)
+		root->right = delete(root->right,data);
+	else{
+		if(root->left == NULL || root->right == NULL){
+			temp = root->left ? root->left : root->right;
+
+			// No child case
+			if(temp == NULL){
+				temp = root;
+				root = NULL;
+			}
+			else // One child case
+			 *root = *temp; // Copy the contents of the non-empty child
+
+			free(temp);
 		}
-		//right child right subtree
-		else if(data > p->right->data)
-			return leftRotate(p);
-		//right child left subtree
 		else{
-			p->right = rightRotate(p->right);
-			return leftRotate(p);
+			// node with two children: Get the inorder successor (smallest in the right subtree)
+			temp = minValueNode(root->right);
+
+			// Copy the inorder successor's data to this node
+			root->data = temp->data;
+
+			// Delete the inorder successor
+			root->right = delete(root->right, temp->data);
 		}
 	}
-	else
-		return p;
+
+	if (root == NULL)
+	  return root;
+
+	root->height = max(findHeight(root->left), findHeight(root->right)) + 1;
+
+	int balance = checkHeight(root);
+
+	// Left Left Case
+	if (balance > 1 && checkHeight(root->left) >= 0)
+		return rightRotate(root);
+
+	// Left Right Case
+	if (balance > 1 && checkHeight(root->left) < 0)
+	{
+		root->left =  leftRotate(root->left);
+		return rightRotate(root);
+	}
+
+	// Right Right Case
+	if (balance < -1 && checkHeight(root->right) <= 0)
+		return leftRotate(root);
+
+	// Right Left Case
+	if (balance < -1 && checkHeight(root->right) > 0)
+	{
+		root->right = rightRotate(root->right);
+		return leftRotate(root);
+	}
+
+	return root;
+}
+
+struct avlNode * minValueNode(struct avlNode* node)
+{
+    while (node->left != NULL)
+        node = node->left;
+
+    return node;
 }
 
 int max(int a,int b)
@@ -102,7 +188,7 @@ int checkHeight(struct avlNode *node)
 	if(node == NULL)
 		return 0;
 	else
-		return abs(findHeight(node->left) - findHeight(node->right));
+		return findHeight(node->left) - findHeight(node->right);
 }
 
 struct avlNode *rightRotate(struct avlNode *node)
