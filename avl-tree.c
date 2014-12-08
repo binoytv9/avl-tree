@@ -1,4 +1,4 @@
-/* implementation of Adelson-Velsky and Landi's Tree */
+/*	implementation of Adelson-Velsky and Landi's Tree	*/
 
 
 #include<stdio.h>
@@ -20,11 +20,13 @@ struct avlNode *leftRotate(struct avlNode *node);
 struct avlNode *rightRotate(struct avlNode *node);
 struct avlNode *insert(struct avlNode *p,int data);
 struct avlNode * minValueNode(struct avlNode* node);
-struct avlNode *delete(struct avlNode *root,int data);
+struct avlNode *delete(struct avlNode *p,int data,int *found);
 
 main()
 {
 	int l;
+	int found = 0;
+	int data_to_delete;
 	int a[] = {8,3,7,5,1,9,4};
 	struct avlNode *root = NULL;
 
@@ -35,9 +37,15 @@ main()
 	printTree(root);
 	printf("\n\n");
 
-	printf("after deleting 8\n\n");
-	root = delete(root,8);
-	printTree(root);
+	printf("\tenter the data to delete : ");
+	scanf("%d",&data_to_delete);
+	root = delete(root,data_to_delete,&found);
+	if(found){
+		printf("\n\nafter deleting %d\n\n\t\t",data_to_delete);
+		printTree(root);
+	}
+	else
+		printf("\n\n\t%d not found",data_to_delete);
 	printf("\n\n");
 }
 
@@ -93,77 +101,79 @@ struct avlNode *insert(struct avlNode *p,int data)
 	return p;
 }
 
-struct avlNode *delete(struct avlNode *root,int data)
+struct avlNode *delete(struct avlNode *p,int data,int *found)
 {
-	int balance;
+	int hFactor;
 	struct avlNode *tmp;
 
-	if(root == NULL)
+	if(p == NULL)
 		return NULL;
 
-	if(data < root->data)
-		root->left = delete(root->left,data);
-	else if(data > root->data)
-		root->right = delete(root->right,data);
+	if(data < p->data)
+		p->left = delete(p->left,data,found);
+	else if(data > p->data)
+		p->right = delete(p->right,data,found);
 	else{
-		if(root->left == NULL || root->right == NULL){
-			tmp = root->left ? root->left : root->right;
+		*found = 1;
+		if(p->left == NULL || p->right == NULL){
+			tmp = p->left ? p->left : p->right;
 
 			// No child case
 			if(tmp == NULL){
-				tmp = root;
-				root = NULL;
-			}
-			else // One child case
-			*root = *tmp; // Copy the contents of the non-empty child
+				tmp = p;
+				p = NULL;
+			} 
+			// One child case
+			else
+			*p = *tmp; // Copy the contents of the non-empty child
 
 			free(tmp);
 		}
 		else{
 			// node with two children: Get the inorder successor (smallest in the right subtree)
-			tmp = minValueNode(root->right);
+			tmp = minValueNode(p->right);
 
 			// Copy the inorder successor's data to this node
-			root->data = tmp->data;
+			p->data = tmp->data;
 
 			// Delete the inorder successor
-			root->right = delete(root->right, tmp->data);
+			p->right = delete(p->right, tmp->data,found);
 		}
 	}
 
-	if (root == NULL)
-	  return root;
+	if (p == NULL)
+		return p;
 
-	root->height = max(findHeight(root->left), findHeight(root->right)) + 1;
+	p->height = max(findHeight(p->left), findHeight(p->right)) + 1;
 
-	balance = checkHeight(root);
+	hFactor = checkHeight(p);
 
 	// Left Left Case
-	if (balance > 1 && checkHeight(root->left) >= 0)
-		return rightRotate(root);
+	if (hFactor > 1 && checkHeight(p->left) >= 0)
+		return rightRotate(p);
 
 	// Left Right Case
-	if (balance > 1 && checkHeight(root->left) < 0)
+	if (hFactor > 1 && checkHeight(p->left) < 0)
 	{
-		root->left =  leftRotate(root->left);
-		return rightRotate(root);
+		p->left =  leftRotate(p->left);
+		return rightRotate(p);
 	}
 
 	// Right Right Case
-	if (balance < -1 && checkHeight(root->right) <= 0)
-		return leftRotate(root);
+	if (hFactor < -1 && checkHeight(p->right) <= 0)
+		return leftRotate(p);
 
 	// Right Left Case
-	if (balance < -1 && checkHeight(root->right) > 0)
+	if (hFactor < -1 && checkHeight(p->right) > 0)
 	{
-		root->right = rightRotate(root->right);
-		return leftRotate(root);
+		p->right = rightRotate(p->right);
+		return leftRotate(p);
 	}
 
-	return root;
+	return p;
 }
 
-struct avlNode * minValueNode(struct avlNode* node)
+struct avlNode *minValueNode(struct avlNode *node)
 {
     while (node->left != NULL)
         node = node->left;

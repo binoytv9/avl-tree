@@ -42,15 +42,18 @@ class TreeNode:
 		if self.has_right_child():
 			self.right_child.parent = self
 
-	def _delete(self,data):
+	def _delete(self,data,found):
 		if self == None:
 			return
 
 		if data < self.data:
-			self.left_child = self.left_child._delete(data)
+			if self.left_child:
+				self.left_child = self.left_child._delete(data,found)
 		elif data > self.data:
-			self.right_child = self.right_child._delete(data)
+			if self.right_child:
+				self.right_child = self.right_child._delete(data,found)
 		else:
+			found[0] = 1
 			if self.is_leaf(): #leaf
 				if self == self.parent.left_child:
 					self.parent.left_child = None
@@ -86,7 +89,6 @@ class TreeNode:
 						self.replace_node_data(self.right_child.data,
 						self.right_child.left_child,
 						self.right_child.right_child)
-
 
 		self.height = max(findHeight(self.left_child),findHeight(self.right_child)) + 1
 
@@ -239,11 +241,11 @@ class AVLtree:
 
 		return current_node
 
-	def delete(self,data):
+	def delete(self,data,found):
 		if self.root == None:
 			raise KeyError('Error : Tree empty')
 		else:
-			self.root = self.root._delete(data)
+			self.root = self.root._delete(data,found)
 
 	def printTree(self):
 		if self.root:
@@ -251,7 +253,6 @@ class AVLtree:
 			print
 		else:
 			print 'Tree empty'
-
 
 def findHeight(node):
 	if node:
@@ -265,7 +266,7 @@ def checkHeight(node):
 	else:
 		return 0
 
-if __name__ == '__main__':
+def main():
 	t = AVLtree()
 	t.insert(8)
 	t.insert(3)
@@ -276,5 +277,22 @@ if __name__ == '__main__':
 	t.insert(4)
 
 	t.printTree()
-	t.delete(5)
-	t.printTree()
+	try:
+		data_to_delete = int(raw_input('\n\tenter the data to delete : '))
+	except ValueError:
+		print '\n\n\tenter a valid number!!!\n\n'
+		sys.exit(0)
+
+	found = [None]
+	t.delete(data_to_delete,found)
+
+	if found[0]:
+		print '\n\nafter deleting ',data_to_delete,'\n\n\t',
+		t.printTree()
+	else:
+		print '\n\n\terror : %d not found!!!'%data_to_delete
+	print '\n'
+
+if __name__ == '__main__':
+	import sys
+	main()
