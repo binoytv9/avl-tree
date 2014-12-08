@@ -95,7 +95,8 @@ struct avlNode *insert(struct avlNode *p,int data)
 
 struct avlNode *delete(struct avlNode *root,int data)
 {
-	struct avlNode *temp;
+	int balance;
+	struct avlNode *tmp;
 
 	if(root == NULL)
 		return NULL;
@@ -106,27 +107,27 @@ struct avlNode *delete(struct avlNode *root,int data)
 		root->right = delete(root->right,data);
 	else{
 		if(root->left == NULL || root->right == NULL){
-			temp = root->left ? root->left : root->right;
+			tmp = root->left ? root->left : root->right;
 
 			// No child case
-			if(temp == NULL){
-				temp = root;
+			if(tmp == NULL){
+				tmp = root;
 				root = NULL;
 			}
 			else // One child case
-			 *root = *temp; // Copy the contents of the non-empty child
+			*root = *tmp; // Copy the contents of the non-empty child
 
-			free(temp);
+			free(tmp);
 		}
 		else{
 			// node with two children: Get the inorder successor (smallest in the right subtree)
-			temp = minValueNode(root->right);
+			tmp = minValueNode(root->right);
 
 			// Copy the inorder successor's data to this node
-			root->data = temp->data;
+			root->data = tmp->data;
 
 			// Delete the inorder successor
-			root->right = delete(root->right, temp->data);
+			root->right = delete(root->right, tmp->data);
 		}
 	}
 
@@ -135,7 +136,7 @@ struct avlNode *delete(struct avlNode *root,int data)
 
 	root->height = max(findHeight(root->left), findHeight(root->right)) + 1;
 
-	int balance = checkHeight(root);
+	balance = checkHeight(root);
 
 	// Left Left Case
 	if (balance > 1 && checkHeight(root->left) >= 0)
@@ -224,7 +225,6 @@ void printTree(struct avlNode *node)
 	if(node != NULL){
 		printTree(node->left);
 		printf("%d ",node->data);
-		//printf("node %d\theight %d\n",node->data,node->height);
 		printTree(node->right);
 	}
 
