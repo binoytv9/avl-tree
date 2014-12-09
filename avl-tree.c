@@ -115,28 +115,29 @@ struct avlNode *delete(struct avlNode *p,int data,int *found)
 		p->right = delete(p->right,data,found);
 	else{
 		*found = 1;
+		//node with less than two children 
 		if(p->left == NULL || p->right == NULL){
 			tmp = p->left ? p->left : p->right;
 
-			// No child case
+			//No child case
 			if(tmp == NULL){
 				tmp = p;
 				p = NULL;
 			} 
-			// One child case
+			//One child case
 			else
-			*p = *tmp; // Copy the contents of the non-empty child
+			*p = *tmp; //Copy the contents of the non-empty child
 
 			free(tmp);
 		}
+		//node with two children 
 		else{
-			// node with two children: Get the inorder successor (smallest in the right subtree)
 			tmp = minValueNode(p->right);
 
-			// Copy the inorder successor's data to this node
+			//Copy the inorder successor's data to this node
 			p->data = tmp->data;
 
-			// Delete the inorder successor
+			//Delete the inorder successor
 			p->right = delete(p->right, tmp->data,found);
 		}
 	}
@@ -148,22 +149,22 @@ struct avlNode *delete(struct avlNode *p,int data,int *found)
 
 	hFactor = checkHeight(p);
 
-	// Left Left Case
+	//left child left subtree
 	if (hFactor > 1 && checkHeight(p->left) >= 0)
 		return rightRotate(p);
 
-	// Left Right Case
+	//left child right subtree
 	if (hFactor > 1 && checkHeight(p->left) < 0)
 	{
 		p->left =  leftRotate(p->left);
 		return rightRotate(p);
 	}
 
-	// Right Right Case
+	//right child right subtree
 	if (hFactor < -1 && checkHeight(p->right) <= 0)
 		return leftRotate(p);
 
-	// Right Left Case
+	//right child left subtree
 	if (hFactor < -1 && checkHeight(p->right) > 0)
 	{
 		p->right = rightRotate(p->right);
@@ -173,6 +174,7 @@ struct avlNode *delete(struct avlNode *p,int data,int *found)
 	return p;
 }
 
+//Get the inorder successor (smallest in the right subtree)
 struct avlNode *minValueNode(struct avlNode *node)
 {
     while (node->left != NULL)
